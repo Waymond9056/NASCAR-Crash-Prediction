@@ -1,6 +1,6 @@
 import requests
 import json
-url = 'https://cf.nascar.com/cacher/2022/1/5150/lap-times.json'
+url = 'https://cf.nascar.com/cacher/2024/1/5411/lap-times.json'
 
 response = requests.get(url)
 
