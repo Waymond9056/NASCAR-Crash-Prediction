@@ -2,10 +2,13 @@ import json
 import numpy as np
 import pandas as pd
 class ParseJson:
+    @staticmethod
     def parse_json(file_name):
         with open(file_name, "r") as file:
             json_dict = json.load(file)
             return json_dict
+    
+    @staticmethod
     def get_driver_info(file_name):
         json_dict = ParseJson.parse_json(file_name)
         number_laps = 326                                               # Add one to the actual number of laps for Lap 0
@@ -26,6 +29,7 @@ class ParseJson:
         lap_time_data.to_csv("output.csv", index = False)
         return lap_time_data
     
+    @staticmethod
     def get_lap_info(file_name, lap_number):
         json_dict = ParseJson.parse_json(file_name)
         driver_laps = json_dict["laps"]
@@ -42,7 +46,6 @@ class ParseJson:
             lap = lap_info[lap_number]
             running_position = lap["RunningPos"]
             dict_index_from_position[running_position - 1] = i
-        print(dict_index_from_position)
         
         # Generate total time until this point
 
@@ -64,20 +67,23 @@ class ParseJson:
             if dict_index == -1:
                 input_np[i][0] = -1.0
                 input_np[i][1] = -1.0
-                print(input_np[i][0])
                 continue
 
-            driver_number = driver_laps[dict_index]["Number"]
-            print(driver_number)
-            
+            driver_number = driver_laps[dict_index]["Number"]            
 
             dict_before_index = dict_index_from_position[i - 1]
             driver_before_number = driver_laps[dict_before_index]["Number"]
 
             input_np[i][0] = curr_time.at[driver_number] - curr_time.at[driver_before_number]
             input_np[i][1] = lap_before_time.at[driver_number] - lap_before_time.at[driver_before_number]
-        print(input_np)
 
+            if input_np[i][0] > 5:
+                input_np[i][0] = -1
+                input_np[i][1] = -1
+
+        return input_np
+
+    @staticmethod
     def get_crash_laps(file_name):
         json_dict = ParseJson.parse_json(file_name)
         flag_info = json_dict["flags"]
@@ -103,8 +109,6 @@ class ParseJson:
                 green_laps.append(i)
         return crash_laps, green_laps
 
+# ParseJson.get_crash_laps("backend/JsonData/2024_Fall.json")
 
-        
-
-
-ParseJson.get_crash_laps("backend/JsonData/2024_Fall.json")
+# print(ParseJson.get_crash_laps("backend/JsonData/2024_Fall.json"))
