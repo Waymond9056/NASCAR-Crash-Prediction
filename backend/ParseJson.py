@@ -78,8 +78,33 @@ class ParseJson:
             input_np[i][1] = lap_before_time.at[driver_number] - lap_before_time.at[driver_before_number]
         print(input_np)
 
+    def get_crash_laps(file_name):
+        json_dict = ParseJson.parse_json(file_name)
+        flag_info = json_dict["flags"]
+        crash_laps = []
+        caution_laps = []
+        green_laps = []
+
+        flag_status = 1
+        for i in range(len(flag_info)):
+            lap = flag_info[i]
+            if lap["FlagState"] == 2:
+                caution_laps.append(i)
+                if flag_status == 1:
+                    flag_status = 2
+                    if i != 60 and i != 61 and i != 160 and i != 161:                    # Don't take into account stage breaks
+                        for ii in range(i - 5, i):
+                            if ii > 0 and not ii in caution_laps:
+                                crash_laps.append(ii)
+            if lap["FlagState"] == 1:
+                flag_status = 1
+        for i in range(1, len(flag_info)):
+            if not i in crash_laps and not i in caution_laps:
+                green_laps.append(i)
+        return crash_laps, green_laps
+
 
         
 
 
-ParseJson.get_lap_info("backend/JsonData/2023_Spring.json", 5)
+ParseJson.get_crash_laps("backend/JsonData/2024_Fall.json")
