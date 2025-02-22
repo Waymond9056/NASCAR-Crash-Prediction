@@ -14,7 +14,7 @@ class ParseJson:
                 driver_info = json_dict["laps"][i]
                 driver_laps = driver_info["Laps"]
                 headers.append(driver_info["Number"])
-                for ii in range(1, len(driver_laps)):                   # Change to 0 when input offsets are done
+                for ii in range(0, len(driver_laps)):                   # Change to 0 when input offsets are done
                     lap_times[ii][i] = driver_laps[ii]["LapTime"]
 
         for i in range(40 - len(headers)):
@@ -23,4 +23,4 @@ class ParseJson:
         lap_time_data = pd.DataFrame(lap_times, columns=headers)
         lap_time_data.to_csv("output.csv", index = False)
 
-ParseJson.parse_json("backend/JsonData/2022_Fall.json")
+ParseJson.parse_json("backend/JsonData/2024_Spring.json")
