@@ -107,7 +107,7 @@ class ParseJson:
         for i in range(1, len(flag_info)):
             if not i in crash_laps and not i in caution_laps:
                 green_laps.append(i)
-        return crash_laps, green_laps
+        return crash_laps, green_laps, caution_laps
 
 # ParseJson.get_crash_laps("backend/JsonData/2024_Fall.json")
 

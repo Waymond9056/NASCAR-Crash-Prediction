@@ -8,11 +8,12 @@ import os
 
 class NascarDataSetTrain(Dataset):
     def __init__(self):
-        races = ["backend/JsonData/2023_Fall.json", "backend/JsonData/2024_Fall.json", "backend/JsonData/2023_Spring.json", "backend/JsonData/2024_Spring.json"]
+        races = ["backend/JsonData/2022_Fall.json", "backend/JsonData/2024_Fall.json", "backend/JsonData/2023_Spring.json", "backend/JsonData/2024_Spring.json"]
         self.inputs = []
         self.outputs = []
         for race in races:
-            crash_laps, green_laps = ParseJson.get_crash_laps(race)
+            crash_laps, green_laps, _ = ParseJson.get_crash_laps(race)
+            green_laps = green_laps[0:len(crash_laps)]
             for lap in crash_laps:
                 lap_tensor = ParseJson.get_lap_info(race, lap)
                 self.inputs.append(lap_tensor)
@@ -32,11 +33,11 @@ class NascarDataSetTrain(Dataset):
     
 class NascarDataSetTest(Dataset):
     def __init__(self):
-        races = ["backend/JsonData/2022_Fall.json"]
+        races = ["backend/JsonData/2023_Fall.json"]
         self.inputs = []
         self.outputs = []
         for race in races:
-            crash_laps, green_laps = ParseJson.get_crash_laps(race)
+            crash_laps, green_laps, caution_laps = ParseJson.get_crash_laps(race)
             for lap in crash_laps:
                 lap_tensor = ParseJson.get_lap_info(race, lap)
                 self.inputs.append(lap_tensor)
@@ -45,17 +46,22 @@ class NascarDataSetTest(Dataset):
                 lap_tensor = ParseJson.get_lap_info(race, lap)
                 self.inputs.append(lap_tensor)
                 self.outputs.append(0)
+            for lap in caution_laps:
+                lap_tensor = ParseJson.get_lap_info(race, lap)
+                self.inputs.append(lap_tensor)
+                self.outputs.append(1)
         self.inputs = torch.Tensor(self.inputs)
         self.outputs = torch.Tensor(self.outputs)
 
     def __len__(self):
-        return self.outputs.size(0)
+        return 185
+        #return self.outputs.size(0)
 
     def __getitem__(self, idx):
         return self.inputs[idx], self.outputs[idx]
 
-train_dataloader = DataLoader(NascarDataSetTrain(), batch_size=64, shuffle=True)
-test_dataloader = DataLoader(NascarDataSetTest(), batch_size=64, shuffle=True)
+train_dataloader = DataLoader(NascarDataSetTrain(), batch_size=200, shuffle=True)
+test_dataloader = DataLoader(NascarDataSetTest(), batch_size=260, shuffle=False)
 
 device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
 print(f"Using {device} device")
@@ -66,13 +72,10 @@ class NeuralNetwork(nn.Module):
         self.flatten = nn.Flatten()
         
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(40*2, 128),
+            nn.Linear(40*2, 32),
             nn.ReLU(),
             nn.Dropout(0.3),  # Dropout layer
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(64, 32),
+            nn.Linear(32, 32),
             nn.ReLU(),
             nn.Linear(32, 1),
         )
@@ -80,8 +83,8 @@ class NeuralNetwork(nn.Module):
     def forward(self, x):
         x = self.flatten(x)
         logits = self.linear_relu_stack(x)
-        prob = torch.sigmoid(logits)
-        return prob
+        return torch.sigmoid(logits)
+
     
 model = NeuralNetwork()
 # Initialize the loss function
@@ -133,10 +136,12 @@ def test_loop(dataloader, model, loss_fn):
     correct /= size
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
-epochs = 20
+epochs = 5
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train_loop(train_dataloader, model, loss_fn, optimizer)
     test_loop(test_dataloader, model, loss_fn)
 print("Done!")
+
+torch.save(model.state_dict(), "backend/model_weights.pth")
     
