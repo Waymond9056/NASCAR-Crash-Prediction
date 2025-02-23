@@ -50,7 +50,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-
+  console.log(probabilities);
 
   useEffect(() => {
     if (lap > 1) {
