@@ -1,7 +1,13 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import YouTube, { YouTubeEvent, YouTubePlayer } from "react-youtube";
+
+
+const LineChart = dynamic(() => import("@/app/chart"), {
+  ssr: false, // This ensures the component is not SSR'd
+});
 
 export default function Home() {
   const [data, setData] = useState(null);
@@ -19,13 +25,12 @@ export default function Home() {
         const newTime = currentTime < 0 ? 0 : currentTime;
 
         setTime((prevTime) => {
-          const flooredTime = Math.floor(newTime);
-          if (flooredTime !== Math.floor(prevTime)) {
+          const flooredTime = Math.ceil(newTime);
+          if (flooredTime !== Math.ceil(prevTime)) {
             fetch(`http://127.0.0.1:5000/getlap/${flooredTime}`)
               .then((res) => res.json())
               .then((data) => {
                 setData(data);
-                console.log(data);
               })
               .catch((error) => console.error("Error fetching data:", error));
           }
@@ -34,24 +39,54 @@ export default function Home() {
       }
     };
 
-    const interval = setInterval(updateTimeAndFetch, 1000);
-
+    const interval = setInterval(updateTimeAndFetch, 100);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div>
-      <div className="p-4">
-        <YouTube videoId="BuTOV0VGwpM" onReady={onReady} />
-        <p className="mt-2">Current Time: {time.toFixed(1)} seconds</p>
-      </div>
-      <div className="p-4">
-        <h1>Fetched Data from Flask</h1>
-        <pre>{JSON.stringify(data, null, 2)}</pre>
+    <div className="bg-gray-900 text-white p-8">
+        
+      <h1 className={`text-center mb-4 font-semibold text-5xl`}>The Caution Flag</h1>
+
+      <div className="min-h-screen grid grid-cols-12">
+        
+        <div className="m-6 xl:col-span-7 col-span-12">
+          {/* YouTube Video Section */}
+          <div className="bg-gray-800 shadow-xl rounded-lg p-6 text-center">
+            <div className="w-full">
+              <YouTube videoId="BuTOV0VGwpM" onReady={onReady} className="w-full rounded-lg" />
+            </div>
+            <p className="mt-4 text-xl font-semibold text-green-400">
+              Current Time: {time.toFixed(1)} seconds
+            </p>
+          </div>
+
+
+          {/* Data Display Section */}
+          <div className="mt-6 bg-gray-800 shadow-xl rounded-lg p-6">
+            <h1 className="text-2xl font-bold text-center mb-4">Fetched Data from Flask</h1>
+            <div className="bg-gray-700 p-4 rounded-lg text-sm overflow-auto max-h-64">
+              <pre>{JSON.stringify(data, null, 2)}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div className="m-6 xl:col-span-5 col-span-12">
+          {data ? (
+            <LineChart
+              labels={["1", "2", "3", "4", "5", "6"]}
+              series={[0.88, 0.2, 0.26, 0.74, 0.44, 0.64]}
+            />
+          ) : (
+            <></>
+          )}
+        </div>
       </div>
     </div>
+    
   );
 }
+
 
 
 // export default function Home() {
