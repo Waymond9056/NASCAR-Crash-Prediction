@@ -26,7 +26,8 @@ class NeuralNetwork(nn.Module):
         logits = self.linear_relu_stack(x)
         return torch.sigmoid(logits)
 
-model = torch.load('backend/model.pth', weights_only=False)
+model = NeuralNetwork()
+model.load_state_dict(torch.load('backend/model_weights.pth', weights_only=True))
 model.eval()
 
 @app.route("/")
@@ -43,7 +44,7 @@ def get_user(username):
 
 @app.route("/getlap/<int:timestamp>", methods=['GET'])
 def get_lap(timestamp):
-    return jsonify(ParseJson.get_lap_based_on_time("JsonData/2023_Fall.json", timestamp))
+    return jsonify(ParseJson.get_lap_based_on_time("backend/JsonData/2023_Fall.json", timestamp))
 
 if __name__ == "__main__":
     print(model(ParseJson.get_lap_history("backend/JsonData/2023_Fall.json", 185)))
