@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import YouTube, { YouTubeEvent, YouTubePlayer } from "react-youtube";
+import Image from "next/image";
 
 
 const LineChart = dynamic(() => import("@/app/chart"), {
@@ -88,8 +89,12 @@ export default function Home() {
   
 
   return (
-    <div className="bg-gray-900 text-white p-8">
-      <h1 className={`text-center mb-10 font-semibold text-5xl`}>The Caution Flag</h1>
+  <div>
+    <div className="bg-gray-900 h-40 mt-4 flex items-center justify-center">
+      <Image src="/title.png" alt="Caution Flag Logo" width={400} height={400} className="" />
+    </div>
+
+    <div className=" text-white p-8">
       <div className="grid gap-10 grid-cols-12">  
         <div className="xl:col-span-7 col-span-12">
           {/* YouTube Video Section */}
@@ -111,7 +116,7 @@ export default function Home() {
         <div className="xl:col-span-7 col-span-12"> 
           {/* Data Display Section */}
           <div className="bg-gray-800 shadow-2xl rounded-xl p-6">
-            <h1 className="text-3xl font-extrabold text-center text-white mb-4">Live Data</h1>
+            <h1 className="text-3xl font-extrabold text-center text-white mb-6">Live Data</h1>
 
             {/* Flex Container for Time and Lap */}
             <div className="flex justify-between items-center gap-4">
@@ -131,7 +136,7 @@ export default function Home() {
         <div className="xl:col-span-5 col-span-12"> 
           {/* Data Display Section */}
           <div className="bg-gray-800 shadow-2xl rounded-xl p-6">
-            <h1 className="text-3xl font-extrabold text-center text-white mb-4">Watchlist</h1>
+            <h1 className="text-3xl font-extrabold text-center text-white mb-6">Watchlist</h1>
 
             {/* Flex Container for Time and Lap */}
             <div className="flex justify-between items-center gap-4">
@@ -155,7 +160,7 @@ export default function Home() {
 
       </div>
     </div>
-    
+  </div>
   );
 }
 
