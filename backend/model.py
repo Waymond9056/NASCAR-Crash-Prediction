@@ -75,8 +75,6 @@ class NeuralNetwork(nn.Module):
             nn.Linear(40*2, 32),
             nn.ReLU(),
             nn.Dropout(0.3),  # Dropout layer
-            nn.Linear(32, 32),
-            nn.ReLU(),
             nn.Linear(32, 1),
         )
 
@@ -136,7 +134,7 @@ def test_loop(dataloader, model, loss_fn):
     correct /= size
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
-epochs = 5
+epochs = 4
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train_loop(train_dataloader, model, loss_fn, optimizer)
