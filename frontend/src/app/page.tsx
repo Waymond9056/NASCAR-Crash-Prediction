@@ -10,14 +10,15 @@ const LineChart = dynamic(() => import("@/app/chart"), {
 });
 
 export default function Home() {
-  const [lap, setLap] = useState(0);
+  const [lap, setLap] = useState<number>(0);
   const [time, setTime] = useState<number>(0);
   const playerRef = useRef<YouTubePlayer | null>(null);
 
   const [laps, setLaps] = useState<string[]>([]);
-  const [probabilities, setProbabilities] = useState();
-
+  const [probabilities, setProbabilities] = useState([]);
   const [y, setY] = useState<number[]>([]);
+
+  const [crashers, setCrashers] = useState<string[]>([]);
 
   const onReady = (event: YouTubeEvent) => {
     playerRef.current = event.target;
@@ -51,45 +52,65 @@ export default function Home() {
 
 
   useEffect(() => {
-    const updateTimeAndFetch = () => {
-      if (lap > 0) {
-        fetch(`http://127.0.0.1:5000/getmodel/${lap}`)
-          .then((res) => res.json())
-          .then((probabilities) => {
-            // console.log("Fetched probabilities:", probabilities); // ✅ Check data before updating state
-            setProbabilities(probabilities); // ✅ Properly update state
-            const temp = new Array(probabilities.length);
-            const tempLaps = new Array(probabilities.length);
-            for (let i = 0; i < probabilities.length; ++i) {
-              temp[i] = Math.round(probabilities[i][0] * 1000) / 1000;
-              tempLaps[i] = i + 1;
-            }
-            setY(temp);
-            setLaps(tempLaps);
-          })
-          .catch((error) => console.error("Error fetching data:", error));
-      }
-    };
+    if (lap > 1) {
+      fetch(`http://127.0.0.1:5000/getmodel/${lap - 1}`)
+        .then((res) => res.json())
+        .then((probabilities) => {
+          // console.log("Fetched probabilities:", probabilities); // ✅ Check data before updating state
+          setProbabilities(probabilities); // ✅ Properly update state
+          const temp = new Array(probabilities.length);
+          const tempLaps = new Array(probabilities.length);
+          for (let i = 0; i < probabilities.length; ++i) {
+            temp[i] = Math.round(probabilities[i][0] * 1000) / 1000;
+            tempLaps[i] = i + 1;
+          }
+          setY(temp);
+          setLaps(tempLaps);
+        })
+        .catch((error) => console.error("Error fetching data:", error));
+    }
+  }, [lap]); // ✅ Runs ONLY when `lap` changes
+
+
+  useEffect(() => {
+    if (lap > 1) {
+      fetch(`http://127.0.0.1:5000/getcrashers/${lap - 1}`)
+        .then((res) => res.json())
+        .then((crashers) => {
+          // console.log("Fetched probabilities:", probabilities); // ✅ Check data before updating state
+          setCrashers(crashers); // ✅ Properly update state
+          console.log(crashers);
+        })
+        .catch((error) => console.error("Error fetching data:", error));
+    }
+  }, [lap]); // ✅ Runs ONLY when `lap` changes
   
-    const interval = setInterval(updateTimeAndFetch, 1000);
-    return () => clearInterval(interval);
-  }, [lap]); // ✅ Add `lap` as a dependency if it changes over time
   
 
   return (
     <div className="bg-gray-900 text-white p-8">
-      <h1 className={`text-center mb-4 font-semibold text-5xl`}>The Caution Flag</h1>
-      <div className="min-h-screen grid grid-cols-12">  
-        <div className="my-6 xl:col-span-7 col-span-12">
+      <h1 className={`text-center mb-10 font-semibold text-5xl`}>The Caution Flag</h1>
+      <div className="grid gap-10 grid-cols-12">  
+        <div className="xl:col-span-7 col-span-12">
           {/* YouTube Video Section */}
-          <div className="bg-gray-800 shadow-xl rounded-lg p-6 text-center">
-            <div className="w-full max-w-3xl mx-auto">
-              <YouTube videoId="BuTOV0VGwpM" onReady={onReady} className="w-full rounded-lg h" />
+          <div className="bg-gray-800 shadow-2xl rounded-xl p-5 text-center">
+            <div className="flex justify-center">
+              <YouTube videoId="BuTOV0VGwpM" onReady={onReady} className="rounded-lg" />
             </div>
           </div>
+        </div>
+        
+        <div className="xl:col-span-5 col-span-12">
+            <LineChart
+              labels={laps.length > 10 ? laps.slice(laps.length - 10, laps.length) : laps}
+              series={y.length > 10 ? y.slice(y.length - 10, y.length) : y}
+            />
+         
+        </div>
 
+        <div className="xl:col-span-7 col-span-12"> 
           {/* Data Display Section */}
-          <div className="mt-6 bg-gray-800 shadow-2xl rounded-xl p-6">
+          <div className="bg-gray-800 shadow-2xl rounded-xl p-6">
             <h1 className="text-3xl font-extrabold text-center text-white mb-4">Live Data</h1>
 
             {/* Flex Container for Time and Lap */}
@@ -105,19 +126,33 @@ export default function Home() {
               </div>
             </div>
           </div>
-
         </div>
 
-        <div className="m-6 xl:col-span-5 col-span-12">
-          {lap ? (
-            <LineChart
-              labels={laps.length > 10 ? laps.slice(laps.length - 10, laps.length) : laps}
-              series={y.length > 10 ? y.slice(y.length - 10, y.length) : y}
-            />
-          ) : (
-            <></>
-          )}
+        <div className="xl:col-span-5 col-span-12"> 
+          {/* Data Display Section */}
+          <div className="bg-gray-800 shadow-2xl rounded-xl p-6">
+            <h1 className="text-3xl font-extrabold text-center text-white mb-4">Watchlist</h1>
+
+            {/* Flex Container for Time and Lap */}
+            <div className="flex justify-between items-center gap-4">
+              <div className="bg-gray-900 text-white px-6 py-3 rounded-lg text-2xl font-semibold shadow-md flex-1 text-center">
+                #{crashers[0]}
+              </div>
+
+              <div className="bg-gray-900 text-white px-6 py-3 rounded-lg text-2xl font-semibold shadow-md flex-1 text-center">
+                #{crashers[1]}
+              </div>
+
+              <div className="bg-gray-900 text-white px-6 py-3 rounded-lg text-2xl font-semibold shadow-md flex-1 text-center">
+                #{crashers[2]}
+              </div>
+            </div>
+          </div>
         </div>
+
+
+
+
       </div>
     </div>
     

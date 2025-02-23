@@ -63,10 +63,9 @@ export default function LineChart(props: { labels: string[]; series: number[] })
     },
   };
   
-
   return (
     <div className="p-4 bg-gray-800 shadow-xl text-white rounded-2xl">
-      <h2 className="text-lg font-semibold  mb-4 text-center ">Risk Factor</h2>
+      <h2 className="text-3xl font-semibold pt-2 text-center ">Risk Factor</h2>
       <div className="flex justify-center">
         <ReactApexChart
           options={options}

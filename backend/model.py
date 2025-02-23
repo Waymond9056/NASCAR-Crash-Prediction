@@ -74,7 +74,7 @@ class NeuralNetwork(nn.Module):
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(40*2, 32),
             nn.ReLU(),
-            nn.Dropout(0.3),  # Dropout layer
+            nn.Dropout(0.95),  # Dropout layer
             nn.Linear(32, 1),
         )
 

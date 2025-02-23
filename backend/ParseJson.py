@@ -79,8 +79,8 @@ class ParseJson:
             input_np[i][1] = lap_before_time.at[driver_number] - lap_before_time.at[driver_before_number]
 
             if input_np[i][0] > 5:
-                input_np[i][0] = 1
-                input_np[i][1] = 1
+                input_np[i][0] = -1
+                input_np[i][1] = -1
 
         return input_np
     
