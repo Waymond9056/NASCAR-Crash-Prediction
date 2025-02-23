@@ -107,8 +107,35 @@ class ParseJson:
         for i in range(1, len(flag_info)):
             if not i in crash_laps and not i in caution_laps:
                 green_laps.append(i)
-        return crash_laps, green_laps
+        return crash_laps, green_laps, caution_laps
+    
+    #Get lap based on seconds, normalized to william byron
+    #CODE IS SUPER SUPER SCUFFED ITS REALLY BAD
+    @staticmethod
+    def get_lap_based_on_time(file_name, time):
+        if time <= 0:
+            return 0
+        json_dict = ParseJson.parse_json(file_name)
+        byron_info = json_dict["laps"][0]
+        #2D array, each row is Lap Number, Running Time
+        lap_by_time = []
+        
+        for i in range(len(byron_info["Laps"])):
+            lap = byron_info["Laps"][i]
 
+            individual_lap = []
+            individual_lap.append(lap["Lap"])
+            if lap["Lap"] > 0:
+                individual_lap.append(lap["LapTime"] + lap_by_time[i - 1][1])
+            else: 
+                individual_lap.append(lap["LapTime"])
+
+            lap_by_time.append(individual_lap)
+            if individual_lap[1] >= time:
+                return individual_lap[0]
+
+        return len(byron_info["Laps"])
+
+# ParseJson.get_driver_info("backend/JsonData/2023_Fall.json")
 # ParseJson.get_crash_laps("backend/JsonData/2024_Fall.json")
 
-# print(ParseJson.get_crash_laps("backend/JsonData/2024_Fall.json"))
