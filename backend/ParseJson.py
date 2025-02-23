@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import pandas as pd
+import torch
 class ParseJson:
     @staticmethod
     def parse_json(file_name):
@@ -65,8 +66,8 @@ class ParseJson:
         for i in range(1, len(dict_index_from_position)):
             dict_index = dict_index_from_position[i]
             if dict_index == -1:
-                input_np[i][0] = -1.0
-                input_np[i][1] = -1.0
+                input_np[i][0] = 1.0
+                input_np[i][1] = 1.0
                 continue
 
             driver_number = driver_laps[dict_index]["Number"]            
@@ -78,10 +79,17 @@ class ParseJson:
             input_np[i][1] = lap_before_time.at[driver_number] - lap_before_time.at[driver_before_number]
 
             if input_np[i][0] > 5:
-                input_np[i][0] = -1
-                input_np[i][1] = -1
+                input_np[i][0] = 1
+                input_np[i][1] = 1
 
         return input_np
+    
+    @staticmethod
+    def get_lap_history(file_name, lap_number):
+        ret = []
+        for i in range(1, lap_number + 1):
+            ret.append(ParseJson.get_lap_info(file_name, i))
+        return torch.Tensor(ret)
 
     @staticmethod
     def get_crash_laps(file_name):
