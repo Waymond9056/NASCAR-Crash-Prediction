@@ -46,6 +46,10 @@ def get_user(username):
 def get_lap(timestamp):
     return jsonify(ParseJson.get_lap_based_on_time("backend/JsonData/2023_Fall.json", timestamp))
 
+@app.route("/getmodel/<int:lap>", methods=['GET'])
+def get_model(lap):
+    return jsonify(model(ParseJson.get_lap_history("backend/JsonData/2023_Fall.json", lap)).tolist())
+
 if __name__ == "__main__":
-    print(model(ParseJson.get_lap_history("backend/JsonData/2023_Fall.json", 185)))
+    # print(model(ParseJson.get_lap_history("backend/JsonData/2023_Fall.json", 100)).tolist())
     app.run(debug=True)

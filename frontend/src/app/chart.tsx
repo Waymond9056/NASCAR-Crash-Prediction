@@ -72,6 +72,7 @@ export default function LineChart(props: { labels: string[]; series: number[] })
           options={options}
           series={[{ name: "Data", data: props.series }]} // ✅ Fix: Convert `series` to an object array
           type="line"
+          width={500}
           height={310}
         />
       </div>

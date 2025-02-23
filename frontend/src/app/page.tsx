@@ -10,9 +10,14 @@ const LineChart = dynamic(() => import("@/app/chart"), {
 });
 
 export default function Home() {
-  const [data, setData] = useState(null);
+  const [lap, setLap] = useState(0);
   const [time, setTime] = useState<number>(0);
   const playerRef = useRef<YouTubePlayer | null>(null);
+
+  const [laps, setLaps] = useState<string[]>([]);
+  const [probabilities, setProbabilities] = useState();
+
+  const [y, setY] = useState<number[]>([]);
 
   const onReady = (event: YouTubeEvent) => {
     playerRef.current = event.target;
@@ -29,8 +34,8 @@ export default function Home() {
           if (flooredTime !== Math.ceil(prevTime)) {
             fetch(`http://127.0.0.1:5000/getlap/${flooredTime}`)
               .then((res) => res.json())
-              .then((data) => {
-                setData(data);
+              .then((lap) => {
+                setLap(lap);
               })
               .catch((error) => console.error("Error fetching data:", error));
           }
@@ -43,39 +48,71 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+
+
+  useEffect(() => {
+    const updateTimeAndFetch = () => {
+      if (lap > 0) {
+        fetch(`http://127.0.0.1:5000/getmodel/${lap}`)
+          .then((res) => res.json())
+          .then((probabilities) => {
+            // console.log("Fetched probabilities:", probabilities); // ✅ Check data before updating state
+            setProbabilities(probabilities); // ✅ Properly update state
+            const temp = new Array(probabilities.length);
+            const tempLaps = new Array(probabilities.length);
+            for (let i = 0; i < probabilities.length; ++i) {
+              temp[i] = Math.round(probabilities[i][0] * 1000) / 1000;
+              tempLaps[i] = i + 1;
+            }
+            setY(temp);
+            setLaps(tempLaps);
+          })
+          .catch((error) => console.error("Error fetching data:", error));
+      }
+    };
+  
+    const interval = setInterval(updateTimeAndFetch, 1000);
+    return () => clearInterval(interval);
+  }, [lap]); // ✅ Add `lap` as a dependency if it changes over time
+  
+
   return (
     <div className="bg-gray-900 text-white p-8">
-        
       <h1 className={`text-center mb-4 font-semibold text-5xl`}>The Caution Flag</h1>
-
-      <div className="min-h-screen grid grid-cols-12">
-        
-        <div className="m-6 xl:col-span-7 col-span-12">
+      <div className="min-h-screen grid grid-cols-12">  
+        <div className="my-6 xl:col-span-7 col-span-12">
           {/* YouTube Video Section */}
           <div className="bg-gray-800 shadow-xl rounded-lg p-6 text-center">
-            <div className="w-full">
-              <YouTube videoId="BuTOV0VGwpM" onReady={onReady} className="w-full rounded-lg" />
+            <div className="w-full max-w-3xl mx-auto">
+              <YouTube videoId="BuTOV0VGwpM" onReady={onReady} className="w-full rounded-lg h" />
             </div>
-            <p className="mt-4 text-xl font-semibold text-green-400">
-              Current Time: {time.toFixed(1)} seconds
-            </p>
           </div>
-
 
           {/* Data Display Section */}
-          <div className="mt-6 bg-gray-800 shadow-xl rounded-lg p-6">
-            <h1 className="text-2xl font-bold text-center mb-4">Fetched Data from Flask</h1>
-            <div className="bg-gray-700 p-4 rounded-lg text-sm overflow-auto max-h-64">
-              <pre>{JSON.stringify(data, null, 2)}</pre>
+          <div className="mt-6 bg-gray-800 shadow-2xl rounded-xl p-6">
+            <h1 className="text-3xl font-extrabold text-center text-white mb-4">Live Data</h1>
+
+            {/* Flex Container for Time and Lap */}
+            <div className="flex justify-between items-center gap-4">
+              {/* Time Display */}
+              <div className="bg-gray-900 text-white px-6 py-3 rounded-lg text-2xl font-semibold shadow-md flex-1 text-center">
+                ⏱️ Time: {time.toFixed(1)}s
+              </div>
+
+              {/* Lap Display */}
+              <div className="bg-gray-900 text-white px-6 py-3 rounded-lg text-2xl font-semibold shadow-md flex-1 text-center">
+                🏁 Lap: {lap}
+              </div>
             </div>
           </div>
+
         </div>
 
         <div className="m-6 xl:col-span-5 col-span-12">
-          {data ? (
+          {lap ? (
             <LineChart
-              labels={["1", "2", "3", "4", "5", "6"]}
-              series={[0.88, 0.2, 0.26, 0.74, 0.44, 0.64]}
+              labels={laps.length > 10 ? laps.slice(laps.length - 10, laps.length) : laps}
+              series={y.length > 10 ? y.slice(y.length - 10, y.length) : y}
             />
           ) : (
             <></>
